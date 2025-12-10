@@ -1,7 +1,7 @@
 <?php
   session_start();
   if (!isset($_SESSION['user'])) {
-    header("Location: login.php");
+    header("Location: /.auth/login");
     exit;
   }
   $user = $_SESSION['user'];
@@ -34,6 +34,13 @@
   <script src="assets/js/config.js"></script>
   <script src="assets/js/videoConfig.js"></script>
   <script>
+    // Check if the user is logged in
+    const user = getCurrentUser();
+    if (!user) {
+      window.location.href = "/.auth/login"; // Redirect to Azure login if not logged in
+    }
+
+    // Fetch and display all videos
     async function fetchVideos() {
       const videos = await fetchVideos();
       const videoList = document.getElementById("videoList");

@@ -1,4 +1,36 @@
-<!-- watch.php -->
+<?php
+  session_start();
+  if (!isset($_SESSION['user'])) {
+    header("Location: /.auth/login");
+    exit;
+  }
+  $user = $_SESSION['user'];
+  
+  // Get video ID from the URL
+  $videoId = $_GET['id'] ?? null;
+  if (!$videoId) {
+    echo "Video ID is required";
+    exit;
+  }
+
+  // Fetch video details from the backend
+  $video = null;
+  try {
+    $videoUrl = "https://video-backend-azure-h9cgcgcsckf8aqgf.germanywestcentral-01.azurewebsites.net/api/videos/$videoId";
+    $response = file_get_contents($videoUrl);
+    if ($response) {
+      $video = json_decode($response, true);
+    }
+  } catch (Exception $e) {
+    echo "Error fetching video details: " . $e->getMessage();
+    exit;
+  }
+
+  if (!$video) {
+    echo "Video not found";
+    exit;
+  }
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,48 +46,21 @@
         <a href="index.php" class="text-gray-700">Home</a>
         <a href="my-videos.php" class="text-gray-700">My Videos</a>
         <a href="upload.php" class="text-gray-700">Upload Video</a>
+        <a href="javascript:void(0)" onclick="logout()" class="text-gray-700">Logout</a>
       </nav>
     </div>
   </header>
 
-  <main class="max-w-3xl mx-auto py-8" id="watchContainer">
-    <p>Loading...</p>
+  <main class="max-w-4xl mx-auto py-8">
+    <h2 class="text-xl font-semibold mb-4"><?php echo $video['title']; ?></h2>
+    <div class="bg-white shadow rounded p-4 mb-4">
+      <video controls class="w-full">
+        <source src="<?php echo $video['blobUrl']; ?>" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    </div>
+    <p class="text-sm text-gray-500"><?php echo $video['description']; ?></p>
+    <p class="mt-2">Views: <?php echo $video['views']; ?></p>
   </main>
-
-  <script src="assets/js/config.js"></script>
-  <script>
-    function getQueryParam(name) {
-      const params = new URLSearchParams(window.location.search);
-      return params.get(name);
-    }
-
-    async function loadVideo() {
-      const id = getQueryParam("id");
-      if (!id) {
-        document.getElementById("watchContainer").innerText = "No video ID provided.";
-        return;
-      }
-
-      const res = await fetch(`${API_BASE_URL}/videos/${id}`);
-      if (!res.ok) {
-        document.getElementById("watchContainer").innerText = "Video not found.";
-        return;
-      }
-      const v = await res.json();
-
-      const container = document.getElementById("watchContainer");
-      container.innerHTML = `
-        <h2 class="text-xl font-semibold mb-4">${v.title}</h2>
-        <video src="${v.blobUrl}" controls class="w-full max-h-[480px] mb-4"></video>
-        <p class="text-gray-700 mb-2">${v.description || ""}</p>
-        <p class="text-sm text-gray-500">
-          Uploaded by: ${v.userId}<br/>
-          Created at: ${new Date(v.createdAt).toLocaleString()}
-        </p>
-      `;
-    }
-
-    loadVideo();
-  </script>
 </body>
 </html>
