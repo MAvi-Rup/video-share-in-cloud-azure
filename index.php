@@ -1,4 +1,11 @@
-<!-- index.php -->
+<?php
+  session_start();
+  if (!isset($_SESSION['user'])) {
+    header("Location: login.php");
+    exit;
+  }
+  $user = $_SESSION['user'];
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,48 +18,46 @@
     <div class="max-w-4xl mx-auto py-4 flex justify-between items-center">
       <h1 class="text-2xl font-bold">Cloud Video Share</h1>
       <nav class="space-x-4">
-        <a href="index.php" class="text-blue-600">Home</a>
+        <a href="index.php" class="text-gray-700">Home</a>
         <a href="my-videos.php" class="text-gray-700">My Videos</a>
         <a href="upload.php" class="text-gray-700">Upload Video</a>
+        <a href="logout.php" class="text-gray-700">Logout</a>
       </nav>
     </div>
   </header>
 
   <main class="max-w-4xl mx-auto py-8">
-    <h2 class="text-xl font-semibold mb-4">Latest Videos</h2>
-    <ul id="homeVideoList" class="space-y-4"></ul>
+    <h2 class="text-xl font-semibold mb-4">Welcome, <?php echo $user['username']; ?></h2>
+    <ul id="videoList" class="space-y-4"></ul>
   </main>
 
   <script src="assets/js/config.js"></script>
+  <script src="assets/js/videoConfig.js"></script>
   <script>
-    async function loadHomeVideos() {
-      const res = await fetch(`${API_BASE_URL}/videos`);
-      const videos = await res.json();
-      const list = document.getElementById("homeVideoList");
-      list.innerHTML = "";
+    // Check if the user is logged in
+    const user = getCurrentUser();
+    if (!user) {
+      window.location.href = "login.php";
+    }
 
-      videos.forEach(v => {
-        const li = document.createElement("li");
-        li.className = "bg-white shadow rounded p-4 flex gap-4";
-        li.innerHTML = `
-          <video src="${v.blobUrl}" controls class="w-48 h-32"></video>
-          <div>
-            <h3 class="font-semibold">${v.title}</h3>
-            <p class="text-sm text-gray-600">${v.description || ""}</p>
-            <p class="text-xs text-gray-500 mt-1">
-              Uploaded by: ${v.userId}<br/>
-              Created: ${new Date(v.createdAt).toLocaleString()}
-            </p>
-            <a href="watch.php?id=${v.id}" class="inline-block mt-2 text-blue-600 underline">
-              Watch full page
-            </a>
-          </div>
+    // Fetch and display all videos
+    async function fetchVideos() {
+      const videos = await fetchVideos();
+      const videoList = document.getElementById("videoList");
+
+      videos.forEach(video => {
+        const videoItem = document.createElement("li");
+        videoItem.classList.add("border", "p-4", "rounded", "shadow", "flex", "items-center");
+        videoItem.innerHTML = `
+          <h3 class="text-lg font-semibold">${video.title}</h3>
+          <p class="text-gray-500">${video.description}</p>
+          <a href="watch.php?id=${video.id}" class="text-blue-600">Watch</a>
         `;
-        list.appendChild(li);
+        videoList.appendChild(videoItem);
       });
     }
 
-    loadHomeVideos();
+    fetchVideos();
   </script>
 </body>
 </html>
