@@ -1,16 +1,9 @@
-<?php
-  session_start();
-  if (!isset($_SESSION['user'])) {
-    header("Location: /.auth/login");
-    exit;
-  }
-  $user = $_SESSION['user'];
-?>
+<!-- my-videos.php -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Home | Cloud Video Share</title>
+  <title>My Videos | Cloud Video Share</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-100 min-h-screen">
@@ -19,45 +12,55 @@
       <h1 class="text-2xl font-bold">Cloud Video Share</h1>
       <nav class="space-x-4">
         <a href="index.php" class="text-gray-700">Home</a>
-        <a href="my-videos.php" class="text-gray-700">My Videos</a>
+        <a href="my-videos.php" class="text-blue-600">My Videos</a>
         <a href="upload.php" class="text-gray-700">Upload Video</a>
-        <a href="javascript:void(0)" onclick="logout()" class="text-gray-700">Logout</a>
       </nav>
     </div>
   </header>
 
   <main class="max-w-4xl mx-auto py-8">
-    <h2 class="text-xl font-semibold mb-4">Welcome, <?php echo $user['username']; ?></h2>
-    <ul id="videoList" class="space-y-4"></ul>
+    <h2 class="text-xl font-semibold mb-4">My Videos</h2>
+    <p class="mb-2 text-sm text-gray-600" id="userLabel"></p>
+    <ul id="myVideoList" class="space-y-4"></ul>
   </main>
 
   <script src="assets/js/config.js"></script>
-  <script src="assets/js/videoConfig.js"></script>
   <script>
-    // Check if the user is logged in
-    const user = getCurrentUser();
-    if (!user) {
-      window.location.href = "/.auth/login"; // Redirect to Azure login if not logged in
-    }
+    async function loadMyVideos() {
+      const userId = getCurrentUserId();
+      document.getElementById("userLabel").innerText = "Showing videos for user: " + userId;
 
-    // Fetch and display all videos
-    async function fetchVideos() {
-      const videos = await fetchVideos();
-      const videoList = document.getElementById("videoList");
+      const res = await fetch(`${API_BASE_URL}/users/${encodeURIComponent(userId)}/videos`);
+      const videos = await res.json();
+      const list = document.getElementById("myVideoList");
+      list.innerHTML = "";
 
-      videos.forEach(video => {
-        const videoItem = document.createElement("li");
-        videoItem.classList.add("border", "p-4", "rounded", "shadow", "flex", "items-center");
-        videoItem.innerHTML = `
-          <h3 class="text-lg font-semibold">${video.title}</h3>
-          <p class="text-gray-500">${video.description}</p>
-          <a href="watch.php?id=${video.id}" class="text-blue-600">Watch</a>
+      videos.forEach(v => {
+        const li = document.createElement("li");
+        li.className = "bg-white shadow rounded p-4 flex justify-between items-center";
+        li.innerHTML = `
+          <div>
+            <h3 class="font-semibold">${v.title}</h3>
+            <video src="${v.blobUrl}" controls class="mt-2 w-48 h-32"></video>
+            <p class="text-sm text-gray-600 mt-1">${v.description || ""}</p>
+          </div>
+          <button data-id="${v.id}" class="bg-red-600 text-white px-3 py-1 rounded delete-btn">
+            Delete
+          </button>
         `;
-        videoList.appendChild(videoItem);
+        list.appendChild(li);
+      });
+
+      document.querySelectorAll(".delete-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id;
+          await fetch(`${API_BASE_URL}/videos/${id}`, { method: "DELETE" });
+          loadMyVideos();
+        });
       });
     }
 
-    fetchVideos();
+    loadMyVideos();
   </script>
 </body>
 </html>

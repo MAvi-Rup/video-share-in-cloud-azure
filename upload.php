@@ -1,11 +1,3 @@
-<?php
-  session_start();
-  if (!isset($_SESSION['user'])) {
-    header("Location: /.auth/login");
-    exit;
-  }
-  $user = $_SESSION['user'];
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,7 +13,6 @@
         <a href="index.php" class="text-gray-700">Home</a>
         <a href="my-videos.php" class="text-gray-700">My Videos</a>
         <a href="upload.php" class="text-blue-600">Upload Video</a>
-        <a href="javascript:void(0)" onclick="logout()" class="text-gray-700">Logout</a>
       </nav>
     </div>
   </header>
@@ -39,45 +30,69 @@
       <label class="text-sm font-medium">Video File</label>
       <input id="file" type="file" accept="video/*" class="border rounded px-3 py-2" required />
 
-      <button class="bg-blue-600 text-white px-4 py-2 rounded self-start">
+      <button class="bg-blue-600 text-white px-4 py-2 rounded self-start mt-2">
         Upload
       </button>
 
-      <p id="status" class="text-sm mt-2 text-gray-600"></p>
+      <p id="status" class="text-sm text-gray-600 mt-2"></p>
     </form>
   </main>
 
   <script src="assets/js/config.js"></script>
-  <script src="assets/js/videoConfig.js"></script>
   <script>
-    document.getElementById("uploadForm").addEventListener("submit", async e => {
+    let currentUserId = null;
+
+    // Initialise auth info when page loads
+    (async () => {
+      await initAuthUser();
+      currentUserId = await getCurrentUserId();
+    })();
+
+    document.getElementById("uploadForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const status = document.getElementById("status");
-      status.innerText = "Uploading...";
+      status.innerText = "";
 
-      const title = document.getElementById("title").value;
-      const description = document.getElementById("description").value;
-      const file = document.getElementById("file").files[0];
-      const userId = await getCurrentUserId();
-
-      if (!userId) {
-        status.innerText = "You must be logged in to upload.";
+      if (!currentUserId) {
+        status.innerText = "You are not logged in via Azure.";
         return;
       }
+
+      const title = document.getElementById("title").value.trim();
+      const description = document.getElementById("description").value.trim();
+      const fileInput = document.getElementById("file");
+      const file = fileInput.files[0];
+
+      if (!file) {
+        status.innerText = "Please choose a video file.";
+        return;
+      }
+
+      status.innerText = "Uploading...";
 
       const formData = new FormData();
       formData.append("title", title);
       formData.append("description", description);
-      formData.append("userId", userId);
+      formData.append("userId", currentUserId);
       formData.append("file", file);
 
-      const result = await uploadVideo(formData);
+      try {
+        const res = await fetch(`${API_BASE_URL}/videos`, {
+          method: "POST",
+          body: formData,
+        });
 
-      if (result) {
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || `Upload failed (${res.status})`);
+        }
+
         status.innerText = "Upload successful!";
+        // Clear the form
         e.target.reset();
-      } else {
-        status.innerText = "Error: Upload failed.";
+      } catch (err) {
+        console.error("Upload error:", err);
+        status.innerText = "Error: " + err.message;
       }
     });
   </script>
