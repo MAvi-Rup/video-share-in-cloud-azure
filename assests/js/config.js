@@ -1,8 +1,7 @@
-// Backend API base URL for user authentication
-const API_BASE_URL =
-    "https://video-backend-azure-h9cgcgcsckf8aqgf.germanywestcentral-01.azurewebsites.net/api";
+// Backend API base URL for user authentication and video actions
+const API_BASE_URL = "https://video-backend-azure-h9cgcgcsckf8aqgf.germanywestcentral-01.azurewebsites.net/api";
 
-// Fetch current authenticated user from Azure Easy Auth
+// Fetch current authenticated user from Azure EasyAuth
 async function fetchAuthUser() {
     try {
         const res = await fetch("/.auth/me", { credentials: "include" });
@@ -45,14 +44,14 @@ async function getCurrentUserId() {
     return CURRENT_USER ? CURRENT_USER.userId : null;
 }
 
-// Helper function to get the current logged-in user's data
+// Get current user data
 function getCurrentUser() {
     return CURRENT_USER;
 }
 
-// Redirect to login if not authenticated
-function checkAuthentication() {
-    if (!CURRENT_USER) {
-        window.location.href = "login.php";
-    }
+// Logout and redirect to login page
+function logout() {
+    fetch("/.auth/logout", { credentials: "include" })
+        .then(() => window.location.href = "login.php")
+        .catch((err) => console.error("Logout failed", err));
 }
