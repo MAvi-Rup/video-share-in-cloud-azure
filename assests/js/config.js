@@ -1,66 +1,58 @@
-// Backend API base URL for video-related actions
-const VIDEO_API_BASE_URL =
+// Backend API base URL for user authentication
+const API_BASE_URL =
     "https://video-backend-azure-h9cgcgcsckf8aqgf.germanywestcentral-01.azurewebsites.net/api";
 
-// Fetch videos from backend API
-async function fetchVideos() {
+// Fetch current authenticated user from Azure Easy Auth
+async function fetchAuthUser() {
     try {
-        const response = await fetch(`${VIDEO_API_BASE_URL}/videos`);
-        if (!response.ok) {
-            console.error("Failed to fetch videos", response.status);
-            return [];
-        }
-        return await response.json();
-    } catch (err) {
-        console.error("Error fetching videos:", err);
-        return [];
-    }
-}
-
-// Fetch a specific video by ID
-async function fetchVideoById(videoId) {
-    try {
-        const response = await fetch(`${VIDEO_API_BASE_URL}/videos/${videoId}`);
-        if (!response.ok) {
-            console.error("Failed to fetch video by ID", response.status);
+        const res = await fetch("/.auth/me", { credentials: "include" });
+        if (!res.ok) {
+            console.error("Failed to call /.auth/me", res.status);
             return null;
         }
-        return await response.json();
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) return null;
+        const principal = data[0];
+        return {
+            userId: principal.user_id || principal.userDetails,
+            name: principal.userDetails,
+            provider: principal.provider_name,
+        };
     } catch (err) {
-        console.error("Error fetching video by ID:", err);
+        console.error("Error reading auth user:", err);
         return null;
     }
 }
 
-// Fetch videos uploaded by a specific user
-async function fetchUserVideos(userId) {
-    try {
-        const response = await fetch(`${VIDEO_API_BASE_URL}/users/${userId}/videos`);
-        if (!response.ok) {
-            console.error("Failed to fetch user videos", response.status);
-            return [];
-        }
-        return await response.json();
-    } catch (err) {
-        console.error("Error fetching user videos:", err);
-        return [];
+// Cache user on each page so we do not call /.auth/me repeatedly
+let CURRENT_USER = null;
+
+// Initialize user information
+async function initAuthUser() {
+    CURRENT_USER = await fetchAuthUser();
+    if (!CURRENT_USER) {
+        alert("You are not authenticated.");
+    } else {
+        console.log("Logged in as:", CURRENT_USER);
     }
 }
 
-// Upload a new video to the backend API
-async function uploadVideo(formData) {
-    try {
-        const response = await fetch(`${VIDEO_API_BASE_URL}/videos`, {
-            method: "POST",
-            body: formData,
-        });
-        if (!response.ok) {
-            console.error("Failed to upload video", response.status);
-            return null;
-        }
-        return await response.json();
-    } catch (err) {
-        console.error("Error uploading video:", err);
-        return null;
+// Helper used by upload / my-videos pages
+async function getCurrentUserId() {
+    if (!CURRENT_USER) {
+        CURRENT_USER = await fetchAuthUser();
+    }
+    return CURRENT_USER ? CURRENT_USER.userId : null;
+}
+
+// Helper function to get the current logged-in user's data
+function getCurrentUser() {
+    return CURRENT_USER;
+}
+
+// Redirect to login if not authenticated
+function checkAuthentication() {
+    if (!CURRENT_USER) {
+        window.location.href = "login.php";
     }
 }
