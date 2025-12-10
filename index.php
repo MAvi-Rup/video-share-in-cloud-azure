@@ -1,9 +1,10 @@
 <?php
-  session_start();
+require_once __DIR__ . '/auth.php';
 
-  // Retrieve user data from session
-  $user = $_SESSION['user'] ?? null;
+// Now $user comes from session if Azure auth headers existed
+$user = $_SESSION['user'] ?? null;
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

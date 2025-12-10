@@ -1,13 +1,10 @@
 <?php
-  session_start();
-  
-  // Check if the user is authenticated
-  $user = $_SESSION['user'] ?? null;
-  if (!$user) {
-    echo "You must be logged in to upload videos.";
-    exit;
-  }
+require_once __DIR__ . '/auth.php';
+
+// Now $user comes from session if Azure auth headers existed
+$user = $_SESSION['user'] ?? null;
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
