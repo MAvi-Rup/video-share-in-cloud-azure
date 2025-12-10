@@ -1,5 +1,6 @@
-// Backend API base URL for user authentication and video actions
-const API_BASE_URL = "https://video-backend-azure-h9cgcgcsckf8aqgf.germanywestcentral-01.azurewebsites.net/api";
+// Backend API base URL for video-related actions
+const API_BASE_URL =
+    "https://video-backend-azure-h9cgcgcsckf8aqgf.germanywestcentral-01.azurewebsites.net/api";
 
 // Fetch current authenticated user from Azure EasyAuth
 async function fetchAuthUser() {
@@ -49,9 +50,9 @@ function getCurrentUser() {
     return CURRENT_USER;
 }
 
-// Logout and redirect to login page
+// Logout and redirect to Azure login
 function logout() {
     fetch("/.auth/logout", { credentials: "include" })
-        .then(() => window.location.href = "login.php")
+        .then(() => window.location.href = "index.php")  // Redirect to home after logout
         .catch((err) => console.error("Logout failed", err));
 }
