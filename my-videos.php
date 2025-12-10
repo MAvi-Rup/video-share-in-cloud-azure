@@ -10,7 +10,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>My Videos | Cloud Video Share</title>
+  <title>Home | Cloud Video Share</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-100 min-h-screen">
@@ -19,7 +19,7 @@
       <h1 class="text-2xl font-bold">Cloud Video Share</h1>
       <nav class="space-x-4">
         <a href="index.php" class="text-gray-700">Home</a>
-        <a href="my-videos.php" class="text-blue-600">My Videos</a>
+        <a href="my-videos.php" class="text-gray-700">My Videos</a>
         <a href="upload.php" class="text-gray-700">Upload Video</a>
         <a href="javascript:void(0)" onclick="logout()" class="text-gray-700">Logout</a>
       </nav>
@@ -28,16 +28,21 @@
 
   <main class="max-w-4xl mx-auto py-8">
     <h2 class="text-xl font-semibold mb-4">Welcome, <?php echo $user['username']; ?></h2>
-    <h3 class="text-lg font-semibold">Your Videos:</h3>
     <ul id="videoList" class="space-y-4"></ul>
   </main>
 
   <script src="assets/js/config.js"></script>
   <script src="assets/js/videoConfig.js"></script>
   <script>
-    async function fetchUserVideos() {
-      const userId = getCurrentUser().userId;
-      const videos = await fetchUserVideos(userId);
+    // Check if the user is logged in
+    const user = getCurrentUser();
+    if (!user) {
+      window.location.href = "/.auth/login"; // Redirect to Azure login if not logged in
+    }
+
+    // Fetch and display all videos
+    async function fetchVideos() {
+      const videos = await fetchVideos();
       const videoList = document.getElementById("videoList");
 
       videos.forEach(video => {
@@ -52,7 +57,7 @@
       });
     }
 
-    fetchUserVideos();
+    fetchVideos();
   </script>
 </body>
 </html>
