@@ -21,7 +21,7 @@
         <a href="index.php" class="text-gray-700">Home</a>
         <a href="my-videos.php" class="text-blue-600">My Videos</a>
         <a href="upload.php" class="text-gray-700">Upload Video</a>
-        <a href="logout.php" class="text-gray-700">Logout</a>
+        <a href="javascript:void(0)" onclick="logout()" class="text-gray-700">Logout</a>
       </nav>
     </div>
   </header>

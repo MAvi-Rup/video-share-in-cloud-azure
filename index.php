@@ -21,7 +21,7 @@
         <a href="index.php" class="text-gray-700">Home</a>
         <a href="my-videos.php" class="text-gray-700">My Videos</a>
         <a href="upload.php" class="text-gray-700">Upload Video</a>
-        <a href="logout.php" class="text-gray-700">Logout</a>
+        <a href="javascript:void(0)" onclick="logout()" class="text-gray-700">Logout</a>
       </nav>
     </div>
   </header>
@@ -34,13 +34,6 @@
   <script src="assets/js/config.js"></script>
   <script src="assets/js/videoConfig.js"></script>
   <script>
-    // Check if the user is logged in
-    const user = getCurrentUser();
-    if (!user) {
-      window.location.href = "login.php";
-    }
-
-    // Fetch and display all videos
     async function fetchVideos() {
       const videos = await fetchVideos();
       const videoList = document.getElementById("videoList");
