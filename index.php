@@ -1,8 +1,6 @@
 <?php
-  session_start();
-
-  // Retrieve user data from session
-  $user = $_SESSION['user'] ?? null;
+require_once __DIR__ . '/auth.php';
+$user = $_SESSION['user'] ?? null;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -20,7 +18,8 @@
         <a href="my-videos.php" class="text-gray-700">My Videos</a>
         <a href="upload.php" class="text-gray-700">Upload Video</a>
         <?php if ($user): ?>
-            <a href="logout.php" class="text-gray-700">Logout</a>
+          <span class="text-gray-500">Hello, <?= htmlspecialchars($user['name']) ?></span>
+          <a href="logout.php" class="text-gray-700">Logout</a>
         <?php endif; ?>
       </nav>
     </div>
@@ -28,35 +27,44 @@
 
   <main class="max-w-4xl mx-auto py-8">
     <?php if ($user): ?>
-      <h2 class="text-xl font-semibold mb-4">Welcome, <?php echo htmlspecialchars($user['name']); ?></h2>
+      <h2 class="text-xl font-semibold mb-4">Welcome, <?= htmlspecialchars($user['name']) ?></h2>
     <?php else: ?>
-      <h2 class="text-xl font-semibold mb-4">Please log in to view videos.</h2>
+      <h2 class="text-xl font-semibold mb-4">You are not logged in.</h2>
     <?php endif; ?>
 
     <ul id="videoList" class="space-y-4"></ul>
   </main>
 
-  <script src="assets/js/videoConfig.js"></script>
   <script>
-    // Fetch and display all videos from backend
-    async function fetchVideos() {
-      const response = await fetch("https://video-backend-azure-h9cgcgcsckf8aqgf.germanywestcentral-01.azurewebsites.net/api/videos");
-      const videos = await response.json();
-      const videoList = document.getElementById("videoList");
+    const API_BASE_URL =
+      "https://video-backend-azure-h9cgcgcsckf8aqgf.germanywestcentral-01.azurewebsites.net/api";
 
-      videos.forEach(video => {
-        const videoItem = document.createElement("li");
-        videoItem.classList.add("border", "p-4", "rounded", "shadow", "flex", "items-center");
-        videoItem.innerHTML = `
-          <h3 class="text-lg font-semibold">${video.title}</h3>
-          <p class="text-gray-500">${video.description}</p>
-          <a href="watch.php?id=${video.id}" class="text-blue-600">Watch</a>
-        `;
-        videoList.appendChild(videoItem);
-      });
+    async function loadVideos() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/videos`);
+        if (!res.ok) {
+          console.error("Failed to fetch videos", res.status);
+          return;
+        }
+        const videos = await res.json();
+        const videoList = document.getElementById("videoList");
+
+        videos.forEach(video => {
+          const li = document.createElement("li");
+          li.className = "border p-4 rounded shadow";
+          li.innerHTML = `
+            <h3 class="text-lg font-semibold">${video.title}</h3>
+            <p class="text-gray-500">${video.description ?? ""}</p>
+            <a href="watch.php?id=${video.id}" class="text-blue-600">Watch</a>
+          `;
+          videoList.appendChild(li);
+        });
+      } catch (e) {
+        console.error("Error loading videos", e);
+      }
     }
 
-    fetchVideos();
+    loadVideos();
   </script>
 </body>
 </html>
