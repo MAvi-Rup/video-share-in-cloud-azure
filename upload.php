@@ -2,6 +2,7 @@
 require_once __DIR__ . '/auth.php';
 $user = $_SESSION['user'] ?? null;
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
