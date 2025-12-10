@@ -1,6 +1,5 @@
 <?php
 session_start();
-include("auth.php"); // Handle authentication via Azure
 
 $user = $_SESSION['user'] ?? null;
 $videoId = $_GET['id'] ?? null;
@@ -46,6 +45,13 @@ $videoId = $_GET['id'] ?? null;
       <p id="videoMeta" class="text-xs text-gray-400"></p>
 
       <p id="status" class="text-sm text-gray-500 mt-4"></p>
+      
+      <!-- Debug info -->
+      <div id="debugInfo" class="mt-4 p-4 bg-gray-100 rounded text-xs font-mono hidden">
+        <p><strong>Debug Info:</strong></p>
+        <p id="debugUrl"></p>
+        <p id="debugBlobName"></p>
+      </div>
     <?php endif; ?>
   </main>
 
@@ -61,6 +67,9 @@ $videoId = $_GET['id'] ?? null;
   const statusEl = document.getElementById("status");
   const videoSourceEl = document.getElementById("videoSource");
   const videoPlayerEl = document.getElementById("videoPlayer");
+  const debugInfoEl = document.getElementById("debugInfo");
+  const debugUrlEl = document.getElementById("debugUrl");
+  const debugBlobNameEl = document.getElementById("debugBlobName");
 
   async function loadVideo() {
     statusEl.textContent = "Loading video details...";
@@ -75,7 +84,7 @@ $videoId = $_GET['id'] ?? null;
       }
 
       const video = await res.json();
-      console.log("Video:", video);
+      console.log("Video data:", video);
 
       titleEl.textContent = video.title || "Untitled video";
       descEl.textContent = video.description || "";
@@ -85,16 +94,35 @@ $videoId = $_GET['id'] ?? null;
         }`;
 
       if (video.blobUrl) {
-        videoSourceEl.src = video.blobUrl; // Use the correct video URL
-        videoPlayerEl.load(); // Reload the video player
+        console.log("Setting video source:", video.blobUrl);
+        videoSourceEl.src = video.blobUrl;
+        videoPlayerEl.load();
+        
+        // Show debug info
+        debugInfoEl.classList.remove('hidden');
+        debugUrlEl.textContent = `URL: ${video.blobUrl}`;
+        debugBlobNameEl.textContent = `Blob Name: ${video.blobName || 'N/A'}`;
+        
+        // Test if blob is accessible
+        videoPlayerEl.addEventListener('error', function(e) {
+          console.error("Video player error:", e);
+          statusEl.textContent = "Error: Video file cannot be loaded. The blob may not exist or is not accessible.";
+          statusEl.classList.add('text-red-600');
+        });
+        
+        videoPlayerEl.addEventListener('loadeddata', function() {
+          statusEl.textContent = "";
+          console.log("Video loaded successfully");
+        });
       } else {
         statusEl.textContent = "No video file URL found.";
+        statusEl.classList.add('text-red-600');
       }
 
-      statusEl.textContent = "";
     } catch (err) {
       console.error("Error loading video:", err);
       statusEl.textContent = "Error loading video.";
+      statusEl.classList.add('text-red-600');
       titleEl.textContent = "Video error.";
     }
   }
