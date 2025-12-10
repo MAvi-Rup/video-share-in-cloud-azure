@@ -1,6 +1,6 @@
 <?php
-// watch.php
-require_once __DIR__ . '/auth.php';
+session_start();
+include("auth.php"); // Handle authentication via Azure
 
 $user = $_SESSION['user'] ?? null;
 $videoId = $_GET['id'] ?? null;
@@ -85,8 +85,8 @@ $videoId = $_GET['id'] ?? null;
         }`;
 
       if (video.blobUrl) {
-        videoSourceEl.src = video.blobUrl;
-        videoPlayerEl.load();
+        videoSourceEl.src = video.blobUrl; // Use the correct video URL
+        videoPlayerEl.load(); // Reload the video player
       } else {
         statusEl.textContent = "No video file URL found.";
       }
