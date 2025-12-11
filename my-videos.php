@@ -59,14 +59,17 @@ $user = $_SESSION['user'] ?? null;
     statusEl.textContent = "Loading your videos...";
 
     try {
-      const res = await fetch(`${API_BASE_URL}/users/${encodeURIComponent(CURRENT_USER_ID)}/videos`);
+      // Fetch ALL videos and filter by the current user on the client
+      const res = await fetch(`${API_BASE_URL}/videos`);
       if (!res.ok) {
         statusEl.textContent = "Failed to load your videos.";
-        console.error("Error fetching user videos:", res.status);
+        console.error("Error fetching videos:", res.status);
         return;
       }
 
-      const videos = await res.json();
+      const allVideos = await res.json();
+      const videos = allVideos.filter(v => v.userId === CURRENT_USER_ID);
+
       videoListEl.innerHTML = "";
 
       if (!videos.length) {
@@ -78,33 +81,31 @@ $user = $_SESSION['user'] ?? null;
 
       videos.forEach(video => {
         const li = document.createElement("li");
-        li.className = "border rounded shadow bg-white p-4 flex flex-col gap-2";
+        li.className = "bg-white shadow rounded p-4 flex justify-between items-start gap-4";
 
         li.innerHTML = `
-          <div class="flex justify-between items-start gap-4">
-            <div>
-              <h3 class="text-lg font-semibold">${video.title}</h3>
-              <p class="text-gray-500 text-sm">
-                ${video.description ? video.description : ""}
-              </p>
-              <p class="text-xs text-gray-400 mt-1">
-                Uploaded: ${video.createdAt ? new Date(video.createdAt).toLocaleString() : "N/A"}
-              </p>
-              <p class="text-xs text-gray-400">
-                Views: ${video.views ?? 0}
-              </p>
-            </div>
-            <div class="flex flex-col gap-2">
-              <a href="watch.php?id=${video.id}"
-                 class="text-sm bg-blue-600 text-white px-3 py-1 rounded text-center">
-                 Watch
-              </a>
-              <button
-                class="text-sm bg-red-600 text-white px-3 py-1 rounded delete-btn"
-                data-id="${video.id}">
-                Delete
-              </button>
-            </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold">${video.title}</h3>
+            <p class="text-gray-500 text-sm">
+              ${video.description ? video.description : ""}
+            </p>
+            <p class="text-xs text-gray-400 mt-1">
+              Uploaded: ${video.createdAt ? new Date(video.createdAt).toLocaleString() : "N/A"}
+            </p>
+            <p class="text-xs text-gray-400">
+              Views: ${video.views ?? 0}
+            </p>
+          </div>
+          <div class="flex flex-col gap-2">
+            <a href="watch.php?id=${video.id}"
+               class="text-sm bg-blue-600 text-white px-3 py-1 rounded text-center">
+               Watch
+            </a>
+            <button
+              class="text-sm bg-red-600 text-white px-3 py-1 rounded delete-btn"
+              data-id="${video.id}">
+              Delete
+            </button>
           </div>
         `;
 
@@ -139,7 +140,7 @@ $user = $_SESSION['user'] ?? null;
 
       const data = await res.json();
       console.log("Deleted:", data);
-      // Reload list
+      // Reload list after delete
       await loadMyVideos();
     } catch (err) {
       console.error("Error deleting video:", err);
