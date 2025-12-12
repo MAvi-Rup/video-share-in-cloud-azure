@@ -12,7 +12,7 @@ $user = $_SESSION['user'] ?? null;
 <body class="bg-slate-100 min-h-screen">
   <header class="bg-white shadow">
     <div class="max-w-4xl mx-auto py-4 flex justify-between items-center">
-      <h1 class="text-2xl font-bold">Cloud Video Share</h1>
+      <h1 class="text-2xl font-bold">Cloud Video</h1>
       <nav class="space-x-4">
         <a href="index.php" class="text-gray-700">Home</a>
         <a href="my-videos.php" class="text-gray-700">My Videos</a>
